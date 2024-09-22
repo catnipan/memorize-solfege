@@ -1,4 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
+import audioDo from "./assets/do.mp3";
+import audioRe from "./assets/re.mp3";
+import audioMi from "./assets/mi.mp3";
+import audioFa from "./assets/fa.mp3";
+import audioSol from "./assets/sol.mp3";
+import audioLa from "./assets/la.mp3";
+import audioSi from "./assets/si.mp3";
 
 type Solfege = [number, string];
 const SOLFEGES: Solfege[] = [
@@ -21,7 +28,17 @@ const CardColor: { [key: number]: string } = {
   7: "hover:bg-fuchsia-50 hover:border-fuchsia-500 hover:shadow-fuchsia-100 hover:text-fuchsia-500",
 };
 
-const DEFAULT_BATCH_SIZE = 5;
+const CardAudio: { [key: number]: [string, number] } = {
+  1: [audioDo, 0.4],
+  2: [audioRe, 0.5],
+  3: [audioMi, 0.5],
+  4: [audioFa, 0.4],
+  5: [audioSol, 0.4],
+  6: [audioLa, 0.5],
+  7: [audioSi, 0.9],
+};
+
+const DEFAULT_BATCH_SIZE = 7;
 
 const refreshIcon = (
   <svg
@@ -51,19 +68,23 @@ function genRandomSolfegeBatch(size: number) {
 
 function SolfegeCard({ solfege: [number, name] }: { solfege: Solfege }) {
   return (
-    <div
+    <button
       className={`text-7xl font-semibold border-4 border-transparent text-center card transition-all ${CardColor[number]}`}
+      onClick={() => {
+        const [src, offset] = CardAudio[number];
+        const audio = new Audio(src);
+        audio.currentTime = offset;
+        audio.play();
+      }}
     >
       <div className="number">{number}</div>
       <div className="name">{name}</div>
-    </div>
+    </button>
   );
 }
 
 function App() {
-  const [solfegeBatch, setSolfgeBatch] = useState(
-    genRandomSolfegeBatch(DEFAULT_BATCH_SIZE)
-  );
+  const [solfegeBatch, setSolfgeBatch] = useState(SOLFEGES);
   const refresh = useCallback(async () => {
     setSolfgeBatch(genRandomSolfegeBatch(DEFAULT_BATCH_SIZE));
   }, [setSolfgeBatch]);
@@ -84,7 +105,7 @@ function App() {
       <header>
         <h1 className="text-2xl">memorize solfège</h1>
       </header>
-      <div className="flex-grow flex flex-col items-center justify-center">
+      <div className="flex-grow flex flex-col items-center justify-center my-4">
         <div className="flex flex-row flex-wrap items-center justify-center">
           {solfegeBatch.map((solfege, idx) => (
             <SolfegeCard key={idx} solfege={solfege} />
