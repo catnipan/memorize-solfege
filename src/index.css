@@ -6,6 +6,8 @@
 
 :root {
   font-family: "Ubuntu", sans-serif;
+  background-size: 3em 3em;
+  background-image: radial-gradient(circle, #555555 1px, rgba(0, 0, 0, 0) 1px);
 }
 
 @layer utilities {
