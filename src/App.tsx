@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
+import { interval, noop, take, tap } from "rxjs";
+
 import audioDo from "./assets/do.mp3";
 import audioRe from "./assets/re.mp3";
 import audioMi from "./assets/mi.mp3";
@@ -38,8 +40,6 @@ const CardAudio: { [key: number]: [string, number] } = {
   7: [audioSi, 0.9],
 };
 
-const DEFAULT_BATCH_SIZE = 7;
-
 const refreshIcon = (
   <svg
     viewBox="0 0 24 24"
@@ -58,18 +58,18 @@ const refreshIcon = (
   </svg>
 );
 
-function genRandomSolfege(): [number, string] {
-  return SOLFEGES[Math.floor(Math.random() * SOLFEGES.length)];
+function getRandom(l: number, r: number): number {
+  return l + Math.floor(Math.random() * (r - l));
 }
 
-function genRandomSolfegeBatch(size: number) {
-  return new Array(size).fill(undefined).map(() => genRandomSolfege());
+function genRandomSolfege(): [number, string] {
+  return SOLFEGES[getRandom(0, SOLFEGES.length)];
 }
 
 function SolfegeCard({ solfege: [number, name] }: { solfege: Solfege }) {
   return (
     <button
-      className={`text-7xl font-semibold border-4 border-transparent text-center card transition-all ${CardColor[number]}`}
+      className={`text-7xl font-semibold border-4 border-transparent text-center card ${CardColor[number]} transition-all`}
       onClick={() => {
         const [src, offset] = CardAudio[number];
         const audio = new Audio(src);
@@ -85,8 +85,24 @@ function SolfegeCard({ solfege: [number, name] }: { solfege: Solfege }) {
 
 function App() {
   const [solfegeBatch, setSolfgeBatch] = useState(SOLFEGES);
-  const refresh = useCallback(async () => {
-    setSolfgeBatch(genRandomSolfegeBatch(DEFAULT_BATCH_SIZE));
+  const refresh = useCallback(() => {
+    interval(30)
+      .pipe(
+        take(SOLFEGES.length),
+        tap((idx) => {
+          setSolfgeBatch((prev) => {
+            const next = [...prev];
+            while (true) {
+              const candidate = genRandomSolfege();
+              if (candidate === next[idx]) continue;
+              next[idx] = candidate;
+              break;
+            }
+            return next;
+          });
+        })
+      )
+      .subscribe(noop);
   }, [setSolfgeBatch]);
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
